@@ -26,16 +26,20 @@ SOFTWARE.
 
 import logging.config
 import logging
+import os
 from scmbackup.config import Config
 from scmbackup.process import Process
 
-CONFIG = Config("program.json")
+configfile: str = os.path.join(os.path.dirname(__file__), "program.json")
+
+CONFIG = Config(configfile)
 CONFIG.save()
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
+logfile: str = os.path.join(os.path.dirname(__file__), CONFIG.logging_logfile)
 LOGGER_SETUP = logging.getLogger()
 LOGGER_SETUP.setLevel(CONFIG.logging_loglevel.upper())
-LOGGER_HANDLER = logging.FileHandler(CONFIG.logging_logfile, "w", "utf-8")
+LOGGER_HANDLER = logging.FileHandler(logfile, "w", "utf-8")
 LOGGER_HANDLER.setFormatter(logging.Formatter(CONFIG.logging_logstring))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
