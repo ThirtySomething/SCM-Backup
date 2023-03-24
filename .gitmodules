@@ -1,0 +1,3 @@
+[submodule "vendor/MDO"]
+	path = vendor/MDO
+	url = https://github.com/ThirtySomething/MDO.git
