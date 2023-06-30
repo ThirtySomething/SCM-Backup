@@ -24,6 +24,14 @@ SOFTWARE.
 ******************************************************************************
 """
 
+import logging
+import os
+import re
+import timeit
+
+import requests
+from requests.auth import HTTPBasicAuth
+
 from scmbackup.basecommon import BaseCommon
 
 
@@ -36,14 +44,58 @@ class Backup(BaseCommon):
         BaseBaPa (_type_): _description_
     """
 
-    def process(self: object, filneame_export: str, scmusr: str, scmpwd: str) -> None:
-        """process - common used method
+    def myInit(self: object) -> None:
+        # Ensure path for repo exists
+        repoPath: str = os.path.join(self.workingpath, self.repo.getName())
+        if not os.path.exists(repoPath):
+            os.makedirs(repoPath)
 
-        Used for each specified client to deal with different kind of repositories.
+    def buildUrlExport(self: object) -> str:
+        """Create URL for export
 
-        Args:
-            filneame_export (str): Filename to store backup
-            scmusr (str): Username of SVN
-            scmpwd (str): Password of SVN
+        Returns:
+            str: URL for exporting a repo
         """
-        pass
+        exportUrl: str = "{}/{}/{}/export/full".format(self.config.scm_url_repos, self.repo.getNamespace(), self.repo.getName())
+        return exportUrl
+
+    def getExportFilename(self: object, dataraw: str) -> str:
+        """Extract filename from request header"""
+        # Get field with filename from headers
+        field: str = dataraw["content-disposition"]
+        # Split field with regular expression
+        result = re.search(r"(attachment;\s+)(filename\s+=\s+)([a-zA-Z0-9\.\-]+)", field)
+        # Filename is in 3rd group, prefix with
+        fname: str = os.path.join(self.workingpath, self.repo.getName(), result.group(3))
+        # Return filename
+        return fname
+
+    def process(self: object) -> None:
+        """process - common used method
+        Used for each repository to call export URL
+        """
+        # Memorize startup of process
+        start = timeit.default_timer()
+        # Get URL for export
+        exportUrl: str = self.buildUrlExport()
+        logging.debug("exportUrl [{}]".format(exportUrl))
+        # Create payload and headers for HTTP-GET
+        payload: str = {"namespace": self.repo.getNamespace(), "name": self.repo.getName()}
+        headers = {"Content-Type": "text/html"}
+        # Call URL
+        response = requests.get(exportUrl, auth=HTTPBasicAuth(self.config.scm_scm_usr, self.config.scm_scm_pwd), params=payload, headers=headers, stream=True)
+        # Check result
+        if not 200 == response.status_code:
+            # Abort when not okay
+            logging.error("Response code [{}] when calling URL [{}]".format(response, exportUrl))
+            stop = timeit.default_timer()
+            logging.error("Process abort after [{:03.3f}] seconds".format(stop - start))
+            return
+        # Extract filename from response headers
+        fname: str = self.getExportFilename(response.headers)
+        # Write file
+        with open(fname, "wb") as repodata:
+            repodata.write(response.content)
+        # Stop process and print message
+        stop = timeit.default_timer()
+        logging.info("Backup process took [{:03.3f}] seconds".format(stop - start))

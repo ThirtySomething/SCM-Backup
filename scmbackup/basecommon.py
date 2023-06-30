@@ -24,17 +24,15 @@ SOFTWARE.
 ******************************************************************************
 """
 
-import os
-from datetime import datetime
-
 from scmbackup.config import Config
 from scmbackup.repo import Repo
+import os
 
 
 class BaseCommon:
     """BaseCommon - Common base class"""
 
-    def __init__(self: object, config: Config, repo: Repo, extension: str) -> None:
+    def __init__(self: object, config: Config, repo: Repo) -> None:
         """Default constructor
 
         Args:
@@ -43,13 +41,10 @@ class BaseCommon:
             extension (str): Extension used for the specified class
         """
         self.config: Config = config
-        self.extension: str = extension
         self.repo: Repo = repo
-        self.timestamp: str = datetime.today().strftime("%Y-%m-%d")
-        # Ensure working path exists
+        # Get full qualified name of working directory
         self.workingpath: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), self.config.app_dirworking)
-        if not os.path.exists(self.workingpath):
-            os.makedirs(self.workingpath)
+        self.myInit()
 
     def __str__(self: object) -> str:
         """String representation of this kind of object
@@ -57,7 +52,7 @@ class BaseCommon:
         Returns:
             str: This object as string
         """
-        return "[{}, {}, {}, {}]".format(self.repo, self.extension, self.timestamp, self.workingpath)
+        return "[{}, {}, {}]".format(self.repo, self.extension, self.workingpath)
 
     def __repr__(self: object) -> str:
         """Sibling function to __str__
@@ -67,14 +62,6 @@ class BaseCommon:
         """
         return self.__str__()
 
-    def getFilename(self: object) -> str:
-        """getFilename - Method to get an uniformed filenamne
-
-        Returns:
-            str: Filename with <repository name>
-            str: Timestamp
-            str: Extension used for search process
-        """
-
-        filename: str = "{}-{}.{}".format(self.repo.name, self.timestamp, self.extension)
-        return filename
+    def myInit(self: object) -> None:
+        """Init method for subclasses when constructor is called"""
+        pass

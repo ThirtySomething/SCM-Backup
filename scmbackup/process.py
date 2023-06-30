@@ -25,26 +25,19 @@ SOFTWARE.
 """
 
 import logging
-import os
 import timeit
 
 import requests
 from requests.auth import HTTPBasicAuth
 
-from scmbackup.backup_git import BackupGit
-from scmbackup.backup_svn import BackupSVN
+from scmbackup.backup import Backup
 from scmbackup.cleanup import Cleanup
 from scmbackup.config import Config
-from scmbackup.packer import Packer
 from scmbackup.repo import Repo
 
 
 class Process:
     """The backup process"""
-
-    extensionGit: str = "bundle"
-    extensionPacked: str = "gz"
-    extensionSVN: str = "dump"
 
     def __init__(self: object, config: Config) -> None:
         """Default constructor
@@ -53,7 +46,6 @@ class Process:
             config (Config): Common used config object
         """
         self.config = config
-        logging.debug("config [{}]".format(self.config))
 
     def getRepolist(self: object) -> list[str]:
         """Read list of repositories
@@ -79,12 +71,8 @@ class Process:
         repolist_raw = result_json["_embedded"]["repositories"]
         # Loop over repositories and create internal object
         for repo_raw in repolist_raw:
-            # Get url for checkout
-            url_outer = repo_raw["_links"]["protocol"]
-            url_inner = url_outer[0]
-            url = url_inner["href"]
             # Create internal repo object
-            obj = Repo(repo_raw["name"], repo_raw["type"], url)
+            obj = Repo(repo_raw["name"], repo_raw["namespace"], repo_raw["type"])
             # Add repo to list
             repolist.append(obj)
         # Memorize stop of process
@@ -99,38 +87,22 @@ class Process:
             repolist (list[str]): List of repositories
         """
         # Memorize startup of process
-        start = timeit.default_timer()
+        startTotal = timeit.default_timer()
         for currentRepo in repolist:
-            doBackup: bool = False
-            if currentRepo.isGit():
-                backupRepo: BackupGit = BackupGit(self.config, currentRepo, Process.extensionGit)
-                doBackup = True
-            if currentRepo.isSVN():
-                backupRepo: BackupSVN = BackupSVN(self.config, currentRepo, Process.extensionSVN)
-                doBackup = True
-            if not doBackup:
-                logging.info("Skip invalid repository [{}]".format(currentRepo))
-                continue
-            logging.info("Start backup process of svn repo [{}]".format(currentRepo.name))
-            # Memorize startup of process
-            startBackup = timeit.default_timer()
-            cleanup: Cleanup = Cleanup(self.config, currentRepo, Process.extensionPacked)
-            packer: Packer = Packer(self.config, currentRepo, Process.extensionPacked)
-            # Create filenames
-            strFilenameExport: str = os.path.join(backupRepo.workingpath, backupRepo.getFilename())
-            strFilenamePacked: str = os.path.join(backupRepo.workingpath, packer.getFilename())
-            # Perform backup
-            backupRepo.process(strFilenameExport, self.config.scm_scm_usr, self.config.scm_scm_pwd)
-            # Pack export
-            packer.process(strFilenameExport, strFilenamePacked)
-            # Cleanup
-            cleanup.process(backupRepo.workingpath)
-            # Memorize stop of process
-            stopBackup = timeit.default_timer()
-            logging.info("End backup process [{}] after [{:03.3f}] seconds".format(currentRepo.name, (stopBackup - startBackup)))
+            start = timeit.default_timer()
+            logging.info("Backing up repo [{}]".format(currentRepo.getName()))
+            # Do backup for repo
+            backupRepo: Backup = Backup(self.config, currentRepo)
+            backupRepo.process()
+            # Do cleanup for repo
+            cleanup: Cleanup = Cleanup(self.config, currentRepo)
+            cleanup.process()
+            # Show used time
+            stop = timeit.default_timer()
+            logging.info("Process took [{:03.3f}] seconds".format(stop - start))
         # Memorize stop of process
-        stop = timeit.default_timer()
-        logging.info("Process over all repositories took [{:03.3f}] seconds".format(stop - start))
+        stopTotal = timeit.default_timer()
+        logging.info("Process over all repositories took [{:03.3f}] seconds".format(stopTotal - startTotal))
 
     def process(self: object) -> None:
         """Start backup process"""

@@ -56,18 +56,19 @@ class Cleanup(BaseCommon):
             logging.info("Deleting file [{}]".format(sorted_files[x][0]))
             os.remove(sorted_files[x][0])
 
-    def process(self: object, workingpath: str) -> None:
+    def process(self: object) -> None:
+        """Cleanup of old backups"""
         # Memorize startup of process
         start = timeit.default_timer()
         logging.info("Cleanup [{}]".format(self.repo.name))
         # Create file pattern and list of affected files
-        filePattern: str = "{}-*.{}".format(self.repo.name, self.extension)
-        fullFilePattern: str = os.path.join(self.workingpath, filePattern)
-        file_paths = glob.glob(fullFilePattern)
+        filePattern: str = self.repo.getPattern(self.workingpath)
+        logging.info("filePattern [{}]".format(filePattern))
+        file_paths = glob.glob(filePattern)
         # Sort list
         sorted_files = self.sort_files_by_last_modified(file_paths)
         # Delete files
         self.delete_oldest_files(sorted_files, int(self.config.app_backuptokeep))
         # Memorize stop of process
         stop = timeit.default_timer()
-        logging.info("Cleanup of repositories [{}*.{}] took [{:03.3f}] seconds".format(self.repo.name, self.extension, (stop - start)))
+        logging.info("Cleanup of repositories [{}] took [{:03.3f}] seconds".format(filePattern, (stop - start)))

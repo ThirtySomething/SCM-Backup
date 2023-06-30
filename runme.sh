@@ -29,19 +29,19 @@ PATH_ENVIRONMENT="${PATH_BASE}/${ENV_NAME}"
 if [[ ! -d "${PATH_ENVIRONMENT}" ]]; then
     # Create environment
     echo "Create missing environment [${ENV_NAME}]"
-    python -m venv ${ENV_NAME}
-
+    python3 -m venv ${ENV_NAME}
+    
     # Activate environment
     if [[ -z "${VIRTUAL_ENV}" ]]; then
         echo "Initial activation of environment [${ENV_NAME}]"
         source "${PATH_ENVIRONMENT}/bin/activate"
     fi
-
+    
     # Install required modules
     if [[ -f "${REQ_NAME}" ]]; then
         echo "Install required modules from [${REQ_NAME}] to [${ENV_NAME}]"
         cat ${REQ_NAME}
-        pip install -r ${REQ_NAME}
+        pip3 install -r ${REQ_NAME}
     else
         echo "List of required modules [${REQ_NAME}] not found"
     fi
@@ -67,7 +67,7 @@ fi
 ################################################################################
 if [[ -f ${SCRIPT} ]]; then
     echo "Execute script [${SCRIPT}]"
-    python ${SCRIPT}
+    python3 ${SCRIPT}
 else
     echo "Script [${SCRIPT}] not found :-("
 fi

@@ -24,21 +24,23 @@ SOFTWARE.
 ******************************************************************************
 """
 
+import os
+
 
 class Repo:
     """Repository representation"""
 
-    def __init__(self: object, name: str, type: str, url: str) -> None:
+    def __init__(self: object, name: str, namespace: str, type: str) -> None:
         """Default constructor
 
         Args:
             name (str): Name of repository
+            namespace (str): Namespace of repository
             type (str): Type of repository, either 'SVN' or 'GIT
-            url (str): URL to repository
         """
         self.name: str = name
+        self.namespace: str = namespace
         self.type: str = type
-        self.url: str = url
 
     def __str__(self: object) -> str:
         """String representation of this kind of object
@@ -46,7 +48,7 @@ class Repo:
         Returns:
             str: This object as string
         """
-        return "[{}, {}, {}]".format(self.name, self.type, self.url)
+        return "[{}, {}, {}]".format(self.name, self.namespace, self.type)
 
     def __repr__(self: object) -> str:
         """Sibling function to __str__
@@ -64,6 +66,19 @@ class Repo:
         """
         return self.name
 
+    def getNamespace(self: object) -> str:
+        """Returns namespace of repository
+
+        Returns:
+            str: Namespace
+        """
+        return self.namespace
+
+    def getPattern(self: object, wdir: str) -> str:
+        nameRaw: str = "{}-{}*.gz".format(self.getNamespace(), self.getName())
+        pattern: str = os.path.join(wdir, self.getName(), nameRaw)
+        return pattern
+
     def getType(self: object) -> str:
         """Returns type of repository
 
@@ -71,31 +86,3 @@ class Repo:
             str: Repository type
         """
         return self.type.lower()
-
-    def getUrl(self: object) -> str:
-        """Returns URL of repository
-
-        Returns:
-            str: Repository URL
-        """
-        return self.url
-
-    def isGit(self: object) -> bool:
-        """Check repo for kind git
-
-        Returns:
-            str: True for git, otherwise False
-        """
-        if "git" == self.getType():
-            return True
-        return False
-
-    def isSVN(self: object) -> None:
-        """Check repo for kind SVN
-
-        Returns:
-            str: True for SVN, otherwise False
-        """
-        if "svn" == self.getType():
-            return True
-        return False
