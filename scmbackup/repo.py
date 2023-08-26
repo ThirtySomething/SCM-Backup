@@ -75,7 +75,8 @@ class Repo:
         return self.namespace
 
     def getPattern(self: object, wdir: str) -> str:
-        nameRaw: str = "{}-{}*.gz".format(self.getNamespace(), self.getName())
+
+        nameRaw: str = "*{}*.gz".format(self.getName())
         pattern: str = os.path.join(wdir, self.getName(), nameRaw)
         return pattern
 
