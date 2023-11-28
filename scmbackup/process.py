@@ -58,9 +58,11 @@ class Process:
         # Create dummy list
         repolist: list[str] = []
         # Get payload
-        payload: str = self.config.scm_payload
+        payload: str = self.config.value_get("scm", "payload")
         # Perform request
-        response = requests.get(self.config.scm_url_repos, auth=HTTPBasicAuth(self.config.scm_scm_usr, self.config.scm_scm_pwd), params=payload)
+        response = requests.get(
+            self.config.value_get("scm", "url_repos"), auth=HTTPBasicAuth(self.config.value_get("scm", "scm_usr"), self.config.value_get("scm", "scm_pwd")), params=payload
+        )
         # Check result
         if not 200 == response.status_code:
             logging.error("Got invalid response code [{}] from url call [{}]".format(response.status_code, self.config.scm_url_repos))

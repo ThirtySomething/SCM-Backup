@@ -36,11 +36,11 @@ CONFIG = Config(configfile)
 CONFIG.save()
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
-logfile: str = os.path.join(os.path.dirname(__file__), CONFIG.logging_logfile)
+logfile: str = os.path.join(os.path.dirname(__file__), CONFIG.value_get("logging", "logfile"))
 LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(CONFIG.logging_loglevel.upper())
+LOGGER_SETUP.setLevel(CONFIG.value_get("logging", "loglevel").upper())
 LOGGER_HANDLER = logging.FileHandler(logfile, "w", "utf-8")
-LOGGER_HANDLER.setFormatter(logging.Formatter(CONFIG.logging_logstring))
+LOGGER_HANDLER.setFormatter(logging.Formatter(CONFIG.value_get("logging", "logstring")))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
 # Script to rename files downloaded with MediathekView to a specific format

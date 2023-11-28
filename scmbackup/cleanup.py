@@ -68,7 +68,7 @@ class Cleanup(BaseCommon):
         # Sort list
         sorted_files = self.sort_files_by_last_modified(file_paths)
         # Delete files
-        self.delete_oldest_files(sorted_files, int(self.config.app_backuptokeep))
+        self.delete_oldest_files(sorted_files, int(self.config.value_get("app", "backuptokeep")))
         # Memorize stop of process
         stop = timeit.default_timer()
         logging.info("Cleanup of repositories [{}] took [{:03.3f}] seconds".format(filePattern, (stop - start)))

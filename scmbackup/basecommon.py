@@ -43,7 +43,7 @@ class BaseCommon:
         self.config: Config = config
         self.repo: Repo = repo
         # Get full qualified name of working directory
-        self.workingpath: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), self.config.app_dirworking)
+        self.workingpath: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), self.config.value_get("app", "dirworking"))
         self.myInit()
 
     def __str__(self: object) -> str:

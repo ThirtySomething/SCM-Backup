@@ -56,7 +56,7 @@ class Backup(BaseCommon):
         Returns:
             str: URL for exporting a repo
         """
-        exportUrl: str = "{}/{}/{}/export/full".format(self.config.scm_url_repos, self.repo.getNamespace(), self.repo.getName())
+        exportUrl: str = "{}/{}/{}/export/full".format(self.config.value_get("scm", "url_repos"), self.repo.getNamespace(), self.repo.getName())
         return exportUrl
 
     def getExportFilename(self: object, dataraw: str) -> str:
@@ -83,7 +83,9 @@ class Backup(BaseCommon):
         payload: str = {"namespace": self.repo.getNamespace(), "name": self.repo.getName()}
         headers = {"Content-Type": "text/html"}
         # Call URL
-        response = requests.get(exportUrl, auth=HTTPBasicAuth(self.config.scm_scm_usr, self.config.scm_scm_pwd), params=payload, headers=headers, stream=True)
+        response = requests.get(
+            exportUrl, auth=HTTPBasicAuth(self.config.value_get("scm", "scm_usr"), self.config.value_get("scm", "scm_pwd")), params=payload, headers=headers, stream=True
+        )
         # Check result
         if not 200 == response.status_code:
             # Abort when not okay
